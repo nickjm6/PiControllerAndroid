@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">PiController</string>
+    <string name="OS1">OS1</string>
+    <string name="OS2">OS2</string>
+    <string name="OS3">OS3</string>
+    <string name="currentOS">Current OS: ???</string>
+</resources>
