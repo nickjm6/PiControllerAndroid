@@ -19,10 +19,14 @@ public class SetIP extends AppCompatActivity {
         setContentView(R.layout.activity_set_ip);
 
         Intent intent = getIntent();
-        String[] PiAddress = intent.getStringExtra("piaddress").split("//")[1].split(":");
-        ipAddr = PiAddress[0];
-        portNo = PiAddress[1];
-
+        try{
+            String[] PiAddress = intent.getStringExtra("piaddress").split("//")[1].split(":");
+            ipAddr = PiAddress[0];
+            portNo = PiAddress[1];
+        }catch(Exception e){
+            ipAddr = "Undefined";
+            portNo = "Undefined";
+        }
         EditText ipField = (EditText) findViewById(R.id.ip);
         ipField.setText(ipAddr);
         EditText portField = (EditText) findViewById(R.id.port);
