@@ -35,10 +35,8 @@ public class SystemCTL extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_system_ctl);
         progressBar = (ProgressBar) findViewById(R.id.volume);
-
         Intent intent = getIntent();
-        PiAddress = intent.getStringExtra("piaddress");
-
+        setAddr(intent.getStringExtra("piAddress"));
         getVol();
         getCurrentOS();
     }
@@ -55,13 +53,7 @@ public class SystemCTL extends AppCompatActivity {
     public void rebootScreen(String requestURL){
         Intent intent = new Intent(this, rebootScreen.class);
         intent.putExtra("requestURL", requestURL);
-        intent.putExtra("piaddress", PiAddress);
-        startActivity(intent);
-    }
-
-    public void setIP(View view){
-        Intent intent = new Intent(this, SetIP.class);
-        intent.putExtra("piaddress", PiAddress);
+        intent.putExtra("piAddress", PiAddress);
         startActivity(intent);
     }
 
@@ -88,7 +80,7 @@ public class SystemCTL extends AppCompatActivity {
     public void getVol(){
         RequestQueue queue = Volley.newRequestQueue(this);
 
-        String url = PiAddress + "/getVol";
+        String url = getString(R.string.serverAddress) + "/getVol";
 
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
@@ -98,7 +90,6 @@ public class SystemCTL extends AppCompatActivity {
                         // Display the first 500 characters of the response string.
                         Log.d("Response", response);
                         int intResponse = Integer.parseInt(response.trim());
-                        Log.d("Integer response", String.valueOf(intResponse));
                         setVolume(intResponse);
                     }
                 }, new Response.ErrorListener() {
@@ -115,7 +106,7 @@ public class SystemCTL extends AppCompatActivity {
     private void volumeRequest(String upOrDown){
         RequestQueue queue = Volley.newRequestQueue(this);
 
-        String url = PiAddress + upOrDown;
+        String url = "http://" + PiAddress + upOrDown;
 
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
@@ -125,7 +116,6 @@ public class SystemCTL extends AppCompatActivity {
                         // Display the first 500 characters of the response string.
                         Log.d("Response", response);
                         int intResponse = Integer.parseInt(response.trim());
-                        Log.d("Integer response", String.valueOf(intResponse));
                         progressBar.setProgress(Integer.parseInt(response.trim()));
                         progressBar.setVisibility(View.VISIBLE);
                     }
@@ -144,10 +134,16 @@ public class SystemCTL extends AppCompatActivity {
         progressBar.setProgress(vol);
     }
 
+    private void setAddr(String val){
+        PiAddress = val;
+        final TextView mTextView = (TextView) findViewById(R.id.ipAddr);
+        mTextView.setText(val);
+    }
+
     private void getCurrentOS(){
         RequestQueue queue = Volley.newRequestQueue(this);
 
-        String url = PiAddress + "/currentOS";
+        String url = getString(R.string.serverAddress) + "/currentOS";
 
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
@@ -240,7 +236,7 @@ public class SystemCTL extends AppCompatActivity {
                             Intent intent = new Intent(SystemCTL.this, rebootScreen.class);
                             intent.putExtra("osName", s);
                             intent.putExtra("requestURL", "/switchOS");
-                            intent.putExtra("piaddress", PiAddress);
+                            intent.putExtra("piAddress", PiAddress);
                             startActivity(intent);
                         }
                     });

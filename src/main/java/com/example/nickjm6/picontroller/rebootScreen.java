@@ -21,21 +21,15 @@ import java.util.concurrent.TimeUnit;
 
 public class rebootScreen extends AppCompatActivity {
     private int numTries = 0;
-    private String PiAddress = "";
-    static SharedPreferences settings;
-    static SharedPreferences.Editor editor;
+    private String PiAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reboot_screen);
-
-        settings = this.getPreferences(0);
         Intent intent = getIntent();
         final String requestURL = intent.getStringExtra("requestURL");
-        PiAddress = intent.getStringExtra("piaddress");
-        TextView text = (TextView) findViewById(R.id.ipaddr);
-        text.setText(PiAddress);
+        PiAddress = intent.getStringExtra("piAddress");
         String osName = "";
         if (requestURL.equals("/switchOS")){
             osName =  intent.getStringExtra("osName").toLowerCase().trim();
@@ -53,7 +47,7 @@ public class rebootScreen extends AppCompatActivity {
             return;
         }
 
-        String url = PiAddress + "/currentOS";
+        String url = getString(R.string.serverAddress) + "/piAddress";
 
         // Request a string response from the provided URL.
         final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
@@ -62,7 +56,7 @@ public class rebootScreen extends AppCompatActivity {
                     public void onResponse(String response) {
                         // Display the first 500 characters of the response string.
                         Log.d("Status", "Got Response! " + response);
-                        mainScreen();
+                        mainScreen(response.trim());
                         return;
                     }
                 }, new Response.ErrorListener() {
@@ -70,7 +64,7 @@ public class rebootScreen extends AppCompatActivity {
             public void onErrorResponse(VolleyError error) {
                 Log.e("ErrorResponse", String.valueOf(error));
                 try {
-                    TimeUnit.SECONDS.sleep(1);
+                    TimeUnit.SECONDS.sleep(5);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -86,7 +80,7 @@ public class rebootScreen extends AppCompatActivity {
 
     private void makePostRequest(final String requestURL, final String osName){
         RequestQueue queue = Volley.newRequestQueue(this);
-        StringRequest postRequest = new StringRequest(Request.Method.POST, requestURL,
+        StringRequest postRequest = new StringRequest(Request.Method.POST, "http://" + requestURL,
                 new Response.Listener<String>()
                 {
                     @Override
@@ -119,7 +113,6 @@ public class rebootScreen extends AppCompatActivity {
                 if(requestURL.equals(PiAddress + "/switchOS")){
                     params.put("osName", osName);
                 }
-
                 return params;
             }
         };
@@ -128,20 +121,13 @@ public class rebootScreen extends AppCompatActivity {
 
     private void failConnection(){
         Intent intent = new Intent(this, failedConnection.class);
-        intent.putExtra("piaddress", PiAddress);
         startActivity(intent);
     }
 
-    private void mainScreen(){
+    private void mainScreen(String addr){
         Intent intent = new Intent(this, SystemCTL.class);
-        intent.putExtra("piaddress", PiAddress);
+        intent.putExtra("piAddress", addr);
         startActivity(intent);
         finish();
-    }
-
-    private void setIP(View view){
-        Intent intent = new Intent(this, SetIP.class);
-        intent.putExtra("piaddress", PiAddress);
-        startActivity(intent);
     }
 }

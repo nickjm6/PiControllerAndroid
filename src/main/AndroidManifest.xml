@@ -24,9 +24,6 @@
             android:screenOrientation="portrait"/>
         <activity android:name=".rebootScreen"
             android:screenOrientation="portrait"/>
-        <activity android:name=".SetIP"
-            android:screenOrientation="portrait">
-        </activity>
     </application>
 
 </manifest>

@@ -4,4 +4,5 @@
     <string name="OS2">OS2</string>
     <string name="OS3">OS3</string>
     <string name="currentOS">Current OS: ???</string>
+    <string name="serverAddress">http://myrazpi.com</string>
 </resources>

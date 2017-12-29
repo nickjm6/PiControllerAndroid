@@ -10,11 +10,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.nickjm6.picontroller.rebootScreen">
 
-    <ImageView
-        android:layout_width="45dp"
-        android:layout_height="45dp"
-        android:src="@drawable/settings"
-        android:onClick="setIP"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -30,13 +25,6 @@
         android:id="@+id/searching"
         android:text="Rebooting Raspberry Pi..."
         android:layout_below="@+id/pleaseWait"/>
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/searching"
-        android:layout_centerHorizontal="true"
-        android:id="@+id/ipaddr"
-        android:textSize="16sp" />
 
     <ProgressBar
         style="?android:attr/progressBarStyleLarge"

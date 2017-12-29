@@ -36,13 +36,4 @@
         android:onClick="tryAgain"
         android:background="#0044FF"/>
 
-    <Button
-        android:layout_width="fill_parent"
-        android:layout_height="50dp"
-        android:layout_below="@+id/tryagain"
-        android:text="Change Address"
-        android:textSize="32sp"
-        android:background="#ff0000"
-        android:layout_marginTop="15dp"
-        android:onClick="setIP"/>
 </RelativeLayout>

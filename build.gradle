@@ -1,21 +1,24 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'
 
 buildscript {
     repositories {
         jcenter()
+        google()
     }
 
     dependencies {
         classpath 'com.android.tools.build:gradle:3.0.1'
+        classpath 'com.google.gms:google-services:3.1.0'
     }
 }
 
 android {
-    compileSdkVersion 25
+    compileSdkVersion 26
     defaultConfig {
         applicationId "com.example.nickjm6.picontroller"
         minSdkVersion 15
-        targetSdkVersion 25
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -36,4 +39,8 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.1.1'
     compile 'com.android.volley:volley:1.1.0'
     testCompile 'junit:junit:4.12'
+}
+
+repositories {
+    google()
 }
