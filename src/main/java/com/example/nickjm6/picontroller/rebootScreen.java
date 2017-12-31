@@ -14,6 +14,8 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,21 +23,21 @@ import java.util.concurrent.TimeUnit;
 
 public class rebootScreen extends AppCompatActivity {
     private int numTries = 0;
-    private String PiAddress;
+    private String serverAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reboot_screen);
+        serverAddress = getString(R.string.serverAddress);
         Intent intent = getIntent();
         final String requestURL = intent.getStringExtra("requestURL");
-        PiAddress = intent.getStringExtra("piAddress");
         String osName = "";
         if (requestURL.equals("/switchOS")){
             osName =  intent.getStringExtra("osName").toLowerCase().trim();
         }
 
-        String url = PiAddress + requestURL;
+        String url = serverAddress + requestURL + "-token";
 
         makePostRequest(url, osName);
     }
@@ -47,7 +49,7 @@ public class rebootScreen extends AppCompatActivity {
             return;
         }
 
-        String url = getString(R.string.serverAddress) + "/piAddress";
+        String url = serverAddress + "/piAddress";
 
         // Request a string response from the provided URL.
         final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
@@ -80,7 +82,7 @@ public class rebootScreen extends AppCompatActivity {
 
     private void makePostRequest(final String requestURL, final String osName){
         RequestQueue queue = Volley.newRequestQueue(this);
-        StringRequest postRequest = new StringRequest(Request.Method.POST, "http://" + requestURL,
+        StringRequest postRequest = new StringRequest(Request.Method.POST, requestURL,
                 new Response.Listener<String>()
                 {
                     @Override
@@ -110,13 +112,18 @@ public class rebootScreen extends AppCompatActivity {
             protected Map<String, String> getParams()
             {
                 Map<String, String>  params = new HashMap<String, String>();
-                if(requestURL.equals(PiAddress + "/switchOS")){
+                if(osName.length() > 0){
                     params.put("osName", osName);
                 }
+                params.put("id_token", getAccount().getIdToken());
                 return params;
             }
         };
         queue.add(postRequest);
+    }
+
+    private GoogleSignInAccount getAccount(){
+        return GoogleSignIn.getLastSignedInAccount(this);
     }
 
     private void failConnection(){

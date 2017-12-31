@@ -83,10 +83,4 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
-
-    private void goToSignIn(){
-        Intent intent = new Intent(this, SignIn.class);
-        startActivity(intent);
-        finish();
-    }
 }

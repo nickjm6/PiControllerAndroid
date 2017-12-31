@@ -1,15 +1,9 @@
 package com.example.nickjm6.picontroller;
 
-import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
-import android.provider.ContactsContract;
-import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -34,13 +28,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+
+import javax.security.auth.callback.Callback;
 
 public class SystemCTL extends AppCompatActivity {
 
@@ -50,9 +44,8 @@ public class SystemCTL extends AppCompatActivity {
     private ProgressBar progressBar;
     private GoogleSignInClient mGoogleSignInClient;
     private Menu barMenu;
-    private String authToken;
     private static final int RC_SIGN_IN = 123;
-
+    private String serverAddr;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,7 +60,12 @@ public class SystemCTL extends AppCompatActivity {
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
+        GoogleSignInAccount acct = getAccount();
+
         progressBar = (ProgressBar) findViewById(R.id.volume);
+
+        serverAddr = getString(R.string.serverAddress);
+
         Intent intent = getIntent();
         setAddr(intent.getStringExtra("piAddress"));
         getVol();
@@ -80,204 +78,6 @@ public class SystemCTL extends AppCompatActivity {
         barMenu = menu;
         updateUI();
         return true;
-    }
-
-    public void refresh(View view){
-        reloadScreen();
-    }
-
-    private void reloadScreen(){
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
-    }
-
-    public void rebootScreen(String requestURL){
-        Intent intent = new Intent(this, rebootScreen.class);
-        intent.putExtra("requestURL", requestURL);
-        intent.putExtra("piAddress", PiAddress);
-        startActivity(intent);
-    }
-
-    public void reboot(View view){
-//        rebootScreen("/reboot");
-        postRequest();
-    }
-
-    public void hdmi(View view){
-        rebootScreen("/hdmi");
-    }
-
-    public void rca(View view){
-        rebootScreen("/rca");
-    }
-
-    public void volumeup(View view){
-        volumeRequest("/volumeup");
-    }
-
-    public void volumedown(View view){
-        volumeRequest("/volumedown");
-    }
-
-    public void getVol(){
-        RequestQueue queue = Volley.newRequestQueue(this);
-
-        String url = getString(R.string.serverAddress) + "/getVol";
-
-        // Request a string response from the provided URL.
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-                        Log.d("Response", response);
-                        int intResponse = Integer.parseInt(response.trim());
-                        setVolume(intResponse);
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("ErrorResponse", String.valueOf(error));
-//                reloadScreen();
-            }
-        });
-        // Add the request to the RequestQueue.
-        queue.add(stringRequest);
-    }
-
-    private void signInRequest(final String token){
-        Log.d("status", token);
-        RequestQueue queue = Volley.newRequestQueue(this);
-        String url = "http://myrazpi.com/auth/google";
-        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>()
-                {
-                    @Override
-                    public void onResponse(String response) {
-                        // response
-                        Log.d("Sign in Response", response);
-                        authToken = response;
-                    }
-                },
-                new Response.ErrorListener()
-                {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        // error
-                        Log.e("Error.Response", error.toString());
-                    }
-                }
-        ) {@Override
-        protected Map<String, String> getParams()
-        {
-            Map<String, String>  params = new HashMap<String, String>();
-            params.put("id_token", token);
-            return params;
-        }
-        };
-        queue.add(postRequest);
-    }
-
-    private void postRequest(){
-        RequestQueue queue = Volley.newRequestQueue(this);
-
-        String url = "http://myrazpi.com/validateLogin";
-
-        // Request a string response from the provided URL.
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-                        Log.d("Response", response);
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("ErrorResponse", String.valueOf(error));
-            }
-        }) {@Override
-        protected Map<String, String> getParams()
-        {
-            Map<String, String>  params = new HashMap<String, String>();
-            params.put("id_token", authToken);
-            return params;
-        }
-        };
-        // Add the request to the RequestQueue.
-
-        queue.add(stringRequest);
-    }
-
-    private void volumeRequest(String upOrDown){
-        RequestQueue queue = Volley.newRequestQueue(this);
-
-        String url = "http://" + PiAddress + upOrDown;
-
-        // Request a string response from the provided URL.
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-                        Log.d("Response", response);
-                        int intResponse = Integer.parseInt(response.trim());
-                        progressBar.setProgress(Integer.parseInt(response.trim()));
-                        progressBar.setVisibility(View.VISIBLE);
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("ErrorResponse", String.valueOf(error));
-                reloadScreen();
-            }
-        });
-        // Add the request to the RequestQueue.
-
-        queue.add(stringRequest);
-    }
-
-    private void setVolume(int vol){
-        progressBar.setProgress(vol);
-    }
-
-    private void setAddr(String val){
-        PiAddress = val;
-        final TextView mTextView = (TextView) findViewById(R.id.ipAddr);
-        mTextView.setText(val);
-    }
-
-    private void getCurrentOS(){
-        RequestQueue queue = Volley.newRequestQueue(this);
-
-        String url = getString(R.string.serverAddress) + "/currentOS";
-
-        // Request a string response from the provided URL.
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-                        String result = response.trim();
-                        Log.d("CurrentOS", result);
-                        if(!result.equals(currentOS))
-                            setCurrentOS(result);
-//                        try {
-//                            TimeUnit.SECONDS.sleep(5);
-//                            getCurrentOS();
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("ErrorResponse", String.valueOf(error));
-                reloadScreen();
-            }
-        });
-        // Add the request to the RequestQueue.
-        queue.add(stringRequest);
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -294,118 +94,6 @@ public class SystemCTL extends AppCompatActivity {
                 // Invoke the superclass to handle it.
                 return super.onOptionsItemSelected(item);
 
-        }
-    }
-
-    private void setCurrentOS(String newOS){
-        currentOS = newOS;
-        final TextView mTextView = (TextView) findViewById(R.id.currentOS);
-        String capNewOS = newOS.substring(0, 1).toUpperCase() + newOS.substring(1);
-        mTextView.setText(capNewOS);
-        ImageView img = (ImageView) findViewById(R.id.osLogo);
-        ImageView img2 = (ImageView) findViewById(R.id.osLogo2);
-        switch (newOS){
-            case "rasplex":
-                img.setImageResource(R.drawable.rasplex);
-                img2.setImageResource(R.drawable.rasplex);
-                break;
-            case "raspbian":
-                img.setImageResource(R.drawable.raspbian);
-                img2.setImageResource(R.drawable.raspbian);
-                break;
-            case "retropie":
-                img.setImageResource(R.drawable.retropie);
-                img2.setImageResource(R.drawable.retropie);
-                break;
-            case "kodi":
-                img.setImageResource(R.drawable.kodi);
-                img2.setImageResource(R.drawable.kodi);
-                break;
-            default:
-                Intent intent = new Intent(SystemCTL.this, MainActivity.class);
-                startActivity(intent);
-                break;
-        }
-
-        ImageView[] osImages = new ImageView[3];
-        ImageView osImage1 = (ImageView) findViewById(R.id.OS1);
-        ImageView osImage2 = (ImageView) findViewById(R.id.OS2);
-        ImageView osImage3 = (ImageView) findViewById(R.id.OS3);
-        osImages[0] = osImage1;
-        osImages[1] = osImage2;
-        osImages[2] = osImage3;
-
-        int i = 0;
-        for (final String s: OSes){
-            if (!s.equals(capNewOS)){
-                if(i < 3) {
-                    ImageView currentImage = osImages[i];
-                    switch (s){
-                        case "Raspbian":
-                            currentImage.setImageResource(R.drawable.raspbian);
-                            break;
-                        case "Rasplex":
-                            currentImage.setImageResource(R.drawable.rasplex);
-                            break;
-                        case "Kodi":
-                            currentImage.setImageResource(R.drawable.kodi);
-                            break;
-                        case "Retropie":
-                            currentImage.setImageResource(R.drawable.retropie);
-                    }
-                    i++;
-                    currentImage.setOnClickListener(new View.OnClickListener() {
-                        public void onClick(View v) {
-                            // Perform action on click
-                            Intent intent = new Intent(SystemCTL.this, rebootScreen.class);
-                            intent.putExtra("osName", s);
-                            intent.putExtra("requestURL", "/switchOS");
-                            intent.putExtra("piAddress", PiAddress);
-                            startActivity(intent);
-                        }
-                    });
-                }
-            }
-        }
-    }
-
-    private String[] filterOS(){
-        String[] res = new String[3];
-        int i = 0;
-        for(String s: OSes){
-            if(!s.toLowerCase().equals(currentOS)){
-                if(i < 3){
-                    res[i] = s;
-                    i++;
-                }
-            }
-        }
-        return res;
-    }
-
-    private void setImages(){
-        ImageView osImage1 = (ImageView) findViewById(R.id.OS1);
-        ImageView osImage2 = (ImageView) findViewById(R.id.OS2);
-        ImageView osImage3 = (ImageView) findViewById(R.id.OS3);
-
-        ImageView[] images = {osImage1, osImage2, osImage3};
-        String[] filtered = filterOS();
-        for(int i = 0; i < 3; i++){
-            String s = filtered[i];
-            switch(s){
-                case "Raspbian":
-                    images[i].setImageResource(R.drawable.raspbian);
-                    break;
-                case "Retropie":
-                    images[i].setImageResource(R.drawable.retropie);
-                    break;
-                case "Rasplex":
-                    images[i].setImageResource(R.drawable.rasplex);
-                    break;
-                case "Kodi":
-                    images[i].setImageResource(R.drawable.kodi);
-                    break;
-            }
         }
     }
 
@@ -433,9 +121,6 @@ public class SystemCTL extends AppCompatActivity {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
 
-            String idToken = account.getIdToken();
-            signInRequest(idToken);
-
             updateUI();
         } catch (ApiException e) {
             // The ApiException status code indicates the detailed failure reason.
@@ -449,8 +134,12 @@ public class SystemCTL extends AppCompatActivity {
         updateUI();
     }
 
+    private GoogleSignInAccount getAccount(){
+        return GoogleSignIn.getLastSignedInAccount(this);
+    }
+
     private boolean isSignedIn(){
-        return GoogleSignIn.getLastSignedInAccount(this) != null;
+        return getAccount() != null;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -515,5 +204,261 @@ public class SystemCTL extends AppCompatActivity {
         }
 
 
+    }
+
+    private void reloadScreen(){
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+    }
+
+    public void rebootScreen(String requestURL){
+        Intent intent = new Intent(this, rebootScreen.class);
+        intent.putExtra("requestURL", requestURL);
+        startActivity(intent);
+    }
+
+    public void reboot(View view){
+        rebootScreen("/reboot");
+    }
+
+    public void refresh(View view){
+        reloadScreen();
+    }
+
+    public void hdmi(View view){
+        rebootScreen("/hdmi");
+    }
+
+    public void rca(View view){
+        rebootScreen("/rca");
+    }
+
+    public void volumeup(View view){
+        volumeRequest("/volumeup-token");
+    }
+
+    public void volumedown(View view){
+        volumeRequest("/volumedown-token");
+    }
+
+    public void getVol(){
+        RequestQueue queue = Volley.newRequestQueue(this);
+
+        String url = serverAddr + "/getVol";
+
+        // Request a string response from the provided URL.
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        // Display the first 500 characters of the response string.
+                        Log.d("Response", response);
+                        int intResponse = Integer.parseInt(response.trim());
+                        setVolume(intResponse);
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("ErrorResponse", String.valueOf(error));
+            }
+        });
+        // Add the request to the RequestQueue.
+        queue.add(stringRequest);
+    }
+
+    private void signInRequest(){
+        RequestQueue queue = Volley.newRequestQueue(this);
+
+        String url = serverAddr + "/auth/google";
+
+        // Request a string response from the provided URL.
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        // Display the first 500 characters of the response string.
+                        Log.d("Response", response);
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("ErrorResponse", String.valueOf(error));
+                signOut();
+            }
+        }){
+            protected Map<String, String> getParams()
+            {
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put("id_token", getAccount().getIdToken());
+                return params;
+            }
+        };
+        // Add the request to the RequestQueue.
+
+        queue.add(stringRequest);
+    }
+
+    private void volumeRequest(String upOrDown){
+        RequestQueue queue = Volley.newRequestQueue(this);
+
+        String url = serverAddr + upOrDown;
+
+        // Request a string response from the provided URL.
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        // Display the first 500 characters of the response string.
+                        Log.d("Response", response);
+                        int intResponse = Integer.parseInt(response.trim());
+                        progressBar.setProgress(Integer.parseInt(response.trim()));
+                        progressBar.setVisibility(View.VISIBLE);
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("ErrorResponse", String.valueOf(error));
+                reloadScreen();
+            }
+        }){
+            protected Map<String, String> getParams()
+            {
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put("id_token", getAccount().getIdToken());
+                return params;
+            }
+        };
+        // Add the request to the RequestQueue.
+
+        queue.add(stringRequest);
+    }
+
+    private void setVolume(int vol){
+        progressBar.setProgress(vol);
+    }
+
+    private void setAddr(String val){
+        PiAddress = val;
+        final TextView mTextView = (TextView) findViewById(R.id.ipAddr);
+        mTextView.setText(val);
+    }
+
+    private void setCurrentOS(String newOS){
+        currentOS = newOS;
+        final TextView mTextView = (TextView) findViewById(R.id.currentOS);
+        String capNewOS = newOS.substring(0, 1).toUpperCase() + newOS.substring(1);
+        mTextView.setText(capNewOS);
+        ImageView img = (ImageView) findViewById(R.id.osLogo);
+        ImageView img2 = (ImageView) findViewById(R.id.osLogo2);
+
+
+        setImages();
+    }
+
+    private void setOSListener(final String osName, ImageView image){
+        image.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Perform action on click
+                Intent intent = new Intent(SystemCTL.this, rebootScreen.class);
+                intent.putExtra("osName", osName);
+                intent.putExtra("requestURL", "/switchOS");
+                startActivity(intent);
+            }
+        });
+    }
+
+    private void getCurrentOS(){
+        RequestQueue queue = Volley.newRequestQueue(this);
+
+        String url = serverAddr + "/currentOS";
+
+        // Request a string response from the provided URL.
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        // Display the first 500 characters of the response string.
+                        String result = response.trim();
+                        Log.d("CurrentOS", result);
+                        if(!result.equals(currentOS))
+                            setCurrentOS(result);
+//                        try {
+//                            TimeUnit.SECONDS.sleep(5);
+//                            getCurrentOS();
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("ErrorResponse", String.valueOf(error));
+                reloadScreen();
+            }
+        });
+        // Add the request to the RequestQueue.
+        queue.add(stringRequest);
+    }
+
+    private String[] filterOS(){
+        String[] res = new String[3];
+        int i = 0;
+        for(String s: OSes){
+            if(!s.toLowerCase().equals(currentOS)){
+                if(i < 3){
+                    res[i] = s;
+                    i++;
+                }
+            }
+        }
+        return res;
+    }
+
+    private void setImages(){
+        ImageView img = (ImageView) findViewById(R.id.osLogo);
+        ImageView img2 = (ImageView) findViewById(R.id.osLogo2);
+
+        int drawableID = 0;
+        switch (currentOS){
+            case "rasplex":
+                drawableID = R.drawable.rasplex;
+                break;
+            case "raspbian":
+                drawableID = R.drawable.raspbian;
+                break;
+            case "retropie":
+                drawableID = R.drawable.retropie;
+                break;
+            case "kodi":
+                drawableID = R.drawable.kodi;
+                break;
+        }
+        img.setImageResource(drawableID);
+        img2.setImageResource(drawableID);
+
+        ImageView osImage1 = (ImageView) findViewById(R.id.OS1);
+        ImageView osImage2 = (ImageView) findViewById(R.id.OS2);
+        ImageView osImage3 = (ImageView) findViewById(R.id.OS3);
+
+        ImageView[] images = {osImage1, osImage2, osImage3};
+        String[] filtered = filterOS();
+        for(int i = 0; i < 3; i++){
+            String s = filtered[i];
+            switch(s){
+                case "Raspbian":
+                    images[i].setImageResource(R.drawable.raspbian);
+                    break;
+                case "Retropie":
+                    images[i].setImageResource(R.drawable.retropie);
+                    break;
+                case "Rasplex":
+                    images[i].setImageResource(R.drawable.rasplex);
+                    break;
+                case "Kodi":
+                    images[i].setImageResource(R.drawable.kodi);
+                    break;
+            }
+            setOSListener(s, images[i]);
+        }
     }
 }
