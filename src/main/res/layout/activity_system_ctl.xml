@@ -1,168 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_system_ctl"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.nickjm6.picontroller.SystemCTL">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="35px"
-        android:id="@+id/currentOS"
-        android:text="@string/currentOS"
-        android:textSize="36sp"/>
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
 
-    <ImageView
-        android:layout_width="75dp"
-        android:layout_height="75dp"
-        android:layout_toLeftOf="@id/currentOS"
-        android:layout_marginRight="10dp"
-        android:id="@+id/osLogo"
-        android:src="@drawable/qmark"/>
-    <ImageView
-        android:layout_width="75dp"
-        android:layout_height="75dp"
-        android:layout_toRightOf="@id/currentOS"
-        android:layout_marginLeft="10dp"
-        android:id="@+id/osLogo2"
-        android:src="@drawable/qmark"/>
+    <include layout="@layout/content_system_ctl" />
 
-    <ImageView
-        android:layout_width="130dp"
-        android:layout_height="130dp"
-        android:layout_below="@+id/osLogo"
-        android:id="@+id/OS1"
-        android:src="@drawable/qmark"/>
 
-    <ImageView
-        android:layout_width="130dp"
-        android:layout_height="130dp"
-        android:layout_below="@+id/osLogo"
-        android:layout_toRightOf="@+id/OS1"
-        android:id="@+id/OS2"
-        android:src="@drawable/qmark"/>
-
-    <ImageView
-        android:layout_width="130dp"
-        android:layout_height="130dp"
-        android:layout_below="@+id/osLogo"
-        android:layout_toRightOf="@id/OS2"
-        android:id="@+id/OS3"
-        android:src="@drawable/qmark"/>
-
-    <Button
-        android:layout_width="250dp"
-        android:layout_height="95dp"
-        android:background="#FF7700"
-        android:textSize="32sp"
-        android:textColor="#FFFFFF"
-        android:layout_marginTop="10dp"
-        android:onClick="rca"
-        android:text="rca"
-        android:id="@+id/rca"
-        android:layout_below="@+id/reboot" />
-
-    <Button
-        android:layout_width="250dp"
-        android:layout_height="95dp"
-        android:background="#000000"
-        android:textColor="#FFFFFF"
-        android:textSize="32sp"
-        android:onClick="hdmi"
-        android:layout_marginTop="10dp"
-        android:id="@+id/hdmi"
-        android:text="hdmi"
-        android:layout_below="@id/rca"/>
-
-    <Button
-        android:layout_width="250dp"
-        android:layout_height="95dp"
-        android:background="#FF0000"
-        android:textSize="32sp"
-        android:id="@+id/reboot"
-        android:onClick="reboot"
-        android:textColor="#FFFFFF"
-        android:text="Reboot"
-        android:layout_below="@+id/OS1"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="15dp"/>
-
-    <Button
-        android:layout_width="110dp"
-        android:layout_height="110dp"
-        android:text="-"
-        android:id="@+id/volumedown"
-        android:onClick="volumedown"
-        android:textSize="64sp"
-        android:layout_alignLeft="@+id/volumeup"
-        android:layout_below="@+id/volumeup" />
-
-    <Button
-        android:layout_width="110dp"
-        android:layout_height="110dp"
-        android:text="+"
-        android:textSize="64dp"
-        android:layout_marginTop="10dp"
-        android:layout_below="@id/OS3"
-        android:layout_toRightOf="@id/reboot"
-        android:layout_marginLeft="20dp"
-        android:id="@+id/volumeup"
-        android:onClick="volumeup" />
-
-    <ImageView
-        android:layout_width="90dp"
-        android:layout_height="90dp"
-        android:src="@drawable/refresh"
-        android:onClick="refresh"
-        android:id="@+id/refresh"
-        android:layout_below="@+id/volumedown"
-        android:layout_alignLeft="@+id/volumedown"
-        android:layout_alignStart="@+id/volumedown" />
-
-    <ProgressBar
-        style="?android:attr/progressBarStyleLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/volumedown"
-        android:layout_marginLeft="7dp"
-        android:layout_marginStart="7dp"
-        android:id="@+id/progressBar"
-        android:visibility="invisible"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/hdmi"
-        android:layout_marginTop="10dp"
-        android:textSize="24sp"
-        android:id="@+id/volText"
-        android:text="Volume: "/>
-
-    <ProgressBar
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="17.5dp"
-        android:layout_below="@id/hdmi"
-        android:id="@+id/volume"
-        style="@android:style/Widget.ProgressBar.Horizontal"
-        android:layout_marginLeft="10dp"
-        android:layout_toRightOf="@+id/volText" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="50px"
-        android:layout_below="@+id/volume"
-        android:id="@+id/ipAddr"
-        android:textSize="36sp"/>
-
-</RelativeLayout>
+</android.support.design.widget.CoordinatorLayout>

@@ -18,6 +18,8 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
 import java.util.concurrent.TimeUnit;
 
@@ -29,7 +31,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         makeRequest();
     }
 
@@ -79,6 +80,12 @@ public class MainActivity extends AppCompatActivity {
     private void mainScreen(String addr){
         Intent intent = new Intent(this, SystemCTL.class);
         intent.putExtra("piAddress", addr);
+        startActivity(intent);
+        finish();
+    }
+
+    private void goToSignIn(){
+        Intent intent = new Intent(this, SignIn.class);
         startActivity(intent);
         finish();
     }

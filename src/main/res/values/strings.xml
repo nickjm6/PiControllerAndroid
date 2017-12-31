@@ -5,4 +5,7 @@
     <string name="OS3">OS3</string>
     <string name="currentOS">Current OS: ???</string>
     <string name="serverAddress">http://myrazpi.com</string>
+    <string name="title_activity_sign_in">SignIn</string>
+    <string name="sign_in_out">Sign In</string>
+    <string name="server_client_id">402213851363-89hqolr403fa0lpqbu1753de9tgtjd23.apps.googleusercontent.com</string>
 </resources>
