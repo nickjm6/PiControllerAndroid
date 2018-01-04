@@ -21,6 +21,9 @@ import com.android.volley.toolbox.Volley;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
@@ -41,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
         }
         final RequestQueue queue = Volley.newRequestQueue(this);
 
-        String url = getString(R.string.serverAddress) + "/piAddress";
+        String url = getString(R.string.serverAddress) + "/piInfo";
 
         // Request a string response from the provided URL.
         final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
@@ -49,9 +52,17 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(String response) {
                         // Display the first 500 characters of the response string.
-                        Log.d("Status", "Found Server!");
-                        mainScreen(response.trim());
-                        return;
+                        try {
+                            JSONObject obj = new JSONObject(response);
+                            String addr = obj.getString("piAddress");
+                            String os = obj.getString("os");
+                            int volume = Integer.parseInt(obj.getString("volume"));
+                            mainScreen(addr, os, volume);
+                            return;
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -77,9 +88,11 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void mainScreen(String addr){
+    private void mainScreen(String addr, String os, int volume){
         Intent intent = new Intent(this, SystemCTL.class);
         intent.putExtra("piAddress", addr);
+        intent.putExtra("volume", volume);
+        intent.putExtra("os", os);
         startActivity(intent);
         finish();
     }

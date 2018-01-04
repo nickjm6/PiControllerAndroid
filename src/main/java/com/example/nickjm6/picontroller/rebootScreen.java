@@ -17,6 +17,9 @@ import com.android.volley.toolbox.Volley;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -44,12 +47,12 @@ public class rebootScreen extends AppCompatActivity {
 
     private void makeRequest(){
         RequestQueue queue = Volley.newRequestQueue(this);
-        if (numTries > 15){
+        if (numTries > 7){
             failConnection();
             return;
         }
 
-        String url = serverAddress + "/piAddress";
+        String url = serverAddress + "/piInfo";
 
         // Request a string response from the provided URL.
         final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
@@ -58,8 +61,16 @@ public class rebootScreen extends AppCompatActivity {
                     public void onResponse(String response) {
                         // Display the first 500 characters of the response string.
                         Log.d("Status", "Got Response! " + response);
-                        mainScreen(response.trim());
-                        return;
+                        try {
+                            JSONObject obj = new JSONObject(response);
+                            String addr = obj.getString("piAddress");
+                            String os = obj.getString("os");
+                            int volume = Integer.parseInt(obj.getString("volume"));
+                            mainScreen(addr, os, volume);
+                            return;
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -90,12 +101,11 @@ public class rebootScreen extends AppCompatActivity {
                         // response
                         Log.d("Response", response);
                         try {
-                            TimeUnit.SECONDS.sleep(8);
+                            TimeUnit.SECONDS.sleep(12);
                             makeRequest();
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        makeRequest();
 
                     }
                 },
@@ -131,9 +141,11 @@ public class rebootScreen extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void mainScreen(String addr){
+    private void mainScreen(String addr, String os, int volume){
         Intent intent = new Intent(this, SystemCTL.class);
         intent.putExtra("piAddress", addr);
+        intent.putExtra("os", os);
+        intent.putExtra("volume", volume);
         startActivity(intent);
         finish();
     }

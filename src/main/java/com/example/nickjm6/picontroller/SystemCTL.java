@@ -3,6 +3,7 @@ package com.example.nickjm6.picontroller;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -28,7 +29,11 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -58,6 +63,7 @@ public class SystemCTL extends AppCompatActivity {
                 .requestEmail()
                 .build();
 
+
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
         GoogleSignInAccount acct = getAccount();
@@ -68,8 +74,21 @@ public class SystemCTL extends AppCompatActivity {
 
         Intent intent = getIntent();
         setAddr(intent.getStringExtra("piAddress"));
-        getVol();
-        getCurrentOS();
+        setVolume(intent.getIntExtra("volume", 0));
+        setCurrentOS(intent.getStringExtra("os"));
+    }
+
+    public void onStart(){
+        super.onStart();
+
+        mGoogleSignInClient.silentSignIn()
+                .addOnCompleteListener(this, new OnCompleteListener<GoogleSignInAccount>(){
+                    @Override
+                    public void onComplete(@NonNull Task<GoogleSignInAccount> task){
+                        handleSignInResult(task);
+                    }
+                });
+
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -241,31 +260,6 @@ public class SystemCTL extends AppCompatActivity {
         volumeRequest("/volumedown-token");
     }
 
-    public void getVol(){
-        RequestQueue queue = Volley.newRequestQueue(this);
-
-        String url = serverAddr + "/getVol";
-
-        // Request a string response from the provided URL.
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-                        Log.d("Response", response);
-                        int intResponse = Integer.parseInt(response.trim());
-                        setVolume(intResponse);
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("ErrorResponse", String.valueOf(error));
-            }
-        });
-        // Add the request to the RequestQueue.
-        queue.add(stringRequest);
-    }
-
     private void signInRequest(){
         RequestQueue queue = Volley.newRequestQueue(this);
 
@@ -365,39 +359,6 @@ public class SystemCTL extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-    }
-
-    private void getCurrentOS(){
-        RequestQueue queue = Volley.newRequestQueue(this);
-
-        String url = serverAddr + "/currentOS";
-
-        // Request a string response from the provided URL.
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-                        String result = response.trim();
-                        Log.d("CurrentOS", result);
-                        if(!result.equals(currentOS))
-                            setCurrentOS(result);
-//                        try {
-//                            TimeUnit.SECONDS.sleep(5);
-//                            getCurrentOS();
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("ErrorResponse", String.valueOf(error));
-                reloadScreen();
-            }
-        });
-        // Add the request to the RequestQueue.
-        queue.add(stringRequest);
     }
 
     private String[] filterOS(){
