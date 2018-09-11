@@ -1,16 +1,10 @@
 package com.example.nickjm6.picontroller;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.drawable.Icon;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -18,33 +12,90 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.concurrent.TimeUnit;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
-
-    private int numTries = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        makeRequest();
+        pingRazPi("192.168.0.15");
     }
 
-    private void makeRequest(){
-        if (numTries > 5){
-            failConnection();
-            return;
+    private void piSearch(){
+        for(int i = 2; i < 255; i++){
+            String hostname = "192.168.0." + i;
+            getInetAddressByName(hostname);
         }
+    }
+
+    private void getInetAddressByName(String name)
+    {
+        AsyncTask<String, Void, Void> task = new AsyncTask<String, Void, Void>()
+        {
+            @Override
+            protected Void doInBackground(String... params)
+            {
+                try
+                {
+                    if(InetAddress.getByName(params[0]).isReachable(300)){
+                        pingRazPi(params[0]);
+                    }
+                }
+                catch (UnknownHostException e)
+                {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        };
+        try
+        {
+            task.execute(name).get();
+        }
+        catch (InterruptedException e)
+        {
+        }
+        catch (ExecutionException e)
+        {
+        }
+
+    }
+
+    private void pingRazPi(final String address){
         final RequestQueue queue = Volley.newRequestQueue(this);
 
-        String url = getString(R.string.serverAddress) + "/piInfo";
+        final String url = "http://" + address + "/";
+        final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.d("ping response", response);
+                        if(response.equals("MyRazPi")){
+                            getOS(address);
+                            return;
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("ping response", "not the raspberry pi");
+            }
+        });
+        queue.add(stringRequest);
+    }
+
+    private void getOS(final String address){
+        final RequestQueue queue = Volley.newRequestQueue(this);
+
+        String url = "http://" + address + "/" + "currentOS";
 
         // Request a string response from the provided URL.
         final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
@@ -52,31 +103,13 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(String response) {
                         // Display the first 500 characters of the response string.
-                        try {
-                            JSONObject obj = new JSONObject(response);
-                            String addr = obj.getString("piAddress");
-                            String os = obj.getString("os");
-                            int volume = Integer.parseInt(obj.getString("volume"));
-                            mainScreen(addr, os, volume);
-                            return;
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-
+                        mainScreen(address, response);
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.e("ErrorResponse", String.valueOf(error));
-                try {
-                    TimeUnit.SECONDS.sleep(5);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                finally {
-                    numTries++;
-                    makeRequest();
-                }
+                failConnection();
             }
         });
         // Add the request to the RequestQueue.
@@ -88,10 +121,9 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void mainScreen(String addr, String os, int volume){
+    private void mainScreen(String addr, String os){
         Intent intent = new Intent(this, SystemCTL.class);
         intent.putExtra("piAddress", addr);
-        intent.putExtra("volume", volume);
         intent.putExtra("os", os);
         startActivity(intent);
         finish();

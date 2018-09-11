@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "402213851363",
+    "project_id": "raspicontroller-187018"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:402213851363:android:58879a678ec555a5",
+        "android_client_info": {
+          "package_name": "com.example.nickjm6.picontroller"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "402213851363-6i6qjgjl5tlt6sd063a95oodg3pms60p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.nickjm6.picontroller",
+            "certificate_hash": "0f029241991ac9f107322b9179e5c5a1b578f269"
+          }
+        },
+        {
+          "client_id": "402213851363-89hqolr403fa0lpqbu1753de9tgtjd23.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLAEakFdWn59dNevpK40XkMFBoFRaB9pw"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

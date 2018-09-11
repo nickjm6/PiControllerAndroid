@@ -47,10 +47,8 @@ public class SystemCTL extends AppCompatActivity {
     private String PiAddress = "";
     private String[] OSes = {"Raspbian", "Rasplex", "Kodi", "Retropie"};
     private ProgressBar progressBar;
-    private GoogleSignInClient mGoogleSignInClient;
     private Menu barMenu;
-    private static final int RC_SIGN_IN = 123;
-    private String serverAddr;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,171 +56,19 @@ public class SystemCTL extends AppCompatActivity {
         Toolbar myToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(myToolbar);
 
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.server_client_id))
-                .requestEmail()
-                .build();
-
-
-        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
-
-        GoogleSignInAccount acct = getAccount();
-
         progressBar = (ProgressBar) findViewById(R.id.volume);
-
-        serverAddr = getString(R.string.serverAddress);
 
         Intent intent = getIntent();
         setAddr(intent.getStringExtra("piAddress"));
-        setVolume(intent.getIntExtra("volume", 0));
         setCurrentOS(intent.getStringExtra("os"));
     }
 
-    public void onStart(){
-        super.onStart();
-
-        mGoogleSignInClient.silentSignIn()
-                .addOnCompleteListener(this, new OnCompleteListener<GoogleSignInAccount>(){
-                    @Override
-                    public void onComplete(@NonNull Task<GoogleSignInAccount> task){
-                        handleSignInResult(task);
-                    }
-                });
-
-    }
-
+    @RequiresApi(api = Build.VERSION_CODES.M)
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.action_menu, menu);
         barMenu = menu;
-        updateUI();
         return true;
-    }
-
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.signInOut:
-                if(isSignedIn())
-                    signOut();
-                else
-                    signIn();
-                return true;
-
-            default:
-                // If we got here, the user's action was not recognized.
-                // Invoke the superclass to handle it.
-                return super.onOptionsItemSelected(item);
-
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    public void signIn() {
-        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
-        startActivityForResult(signInIntent, RC_SIGN_IN);
-        updateUI();
-    }
-
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
-        if (requestCode == RC_SIGN_IN) {
-            // The Task returned from this call is always completed, no need to attach
-            // a listener.
-            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            handleSignInResult(task);
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
-        try {
-            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
-
-            updateUI();
-        } catch (ApiException e) {
-            // The ApiException status code indicates the detailed failure reason.
-            // Please refer to the GoogleSignInStatusCodes class reference for more information.
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    public void signOut(){
-        mGoogleSignInClient.signOut();
-        updateUI();
-    }
-
-    private GoogleSignInAccount getAccount(){
-        return GoogleSignIn.getLastSignedInAccount(this);
-    }
-
-    private boolean isSignedIn(){
-        return getAccount() != null;
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    private void updateUI(){
-        boolean signedIn = isSignedIn();
-
-        Button reboot = (Button) findViewById(R.id.reboot);
-        reboot.setEnabled(signedIn);
-        reboot.setBackgroundColor(Color.rgb(221,221,221));
-
-        Button rca = (Button) findViewById(R.id.rca);
-        rca.setEnabled(signedIn);
-
-        Button hdmi = (Button) findViewById(R.id.hdmi);
-        hdmi.setEnabled(signedIn);
-
-        Button vUp = (Button) findViewById(R.id.volumeup);
-        vUp.setEnabled(signedIn);
-
-        Button vDown = (Button) findViewById(R.id.volumedown);
-        vDown.setEnabled(signedIn);
-
-        ImageView osImage1 = (ImageView) findViewById(R.id.OS1);
-        osImage1.setEnabled(signedIn);
-
-        ImageView osImage2 = (ImageView) findViewById(R.id.OS2);
-        osImage2.setEnabled(signedIn);
-
-        ImageView osImage3 = (ImageView) findViewById(R.id.OS3);
-        osImage3.setEnabled(signedIn);
-
-        if(signedIn){
-            reboot.setBackgroundColor(getColor(R.color.reboot));
-            rca.setBackgroundColor(getColor(R.color.rca));
-            hdmi.setBackgroundColor(getColor(R.color.hdmi));
-            vUp.setBackgroundColor(getColor(R.color.myGrey));
-            vDown.setBackgroundColor(getColor(R.color.myGrey));
-            setImages();
-//
-        } else{
-            reboot.setBackgroundColor(getColor(R.color.disabled));
-            rca.setBackgroundColor(getColor(R.color.disabled));
-            hdmi.setBackgroundColor(getColor(R.color.disabled));
-            vUp.setBackgroundColor(getColor(R.color.disabled));
-            vDown.setBackgroundColor(getColor(R.color.disabled));
-            osImage1.setImageResource(R.drawable.dont);
-            osImage2.setImageResource(R.drawable.dont);
-            osImage3.setImageResource(R.drawable.dont);
-        }
-
-        try{
-            MenuItem signInButton = barMenu.findItem(R.id.signInOut);
-            if(signedIn)
-                signInButton.setTitle("Sign Out");
-            else
-                signInButton.setTitle("Sign In");
-        } catch (Exception e){
-            if(barMenu == null){
-                Log.e("Menu Status", "NULL");
-            }
-            Log.e("Menu alert", "Menu button error");
-        }
-
-
     }
 
     private void reloadScreen(){
@@ -233,6 +79,7 @@ public class SystemCTL extends AppCompatActivity {
     public void rebootScreen(String requestURL){
         Intent intent = new Intent(this, rebootScreen.class);
         intent.putExtra("requestURL", requestURL);
+        intent.putExtra("piAddress", PiAddress);
         startActivity(intent);
     }
 
@@ -253,49 +100,17 @@ public class SystemCTL extends AppCompatActivity {
     }
 
     public void volumeup(View view){
-        volumeRequest("/volumeup-token");
+        volumeRequest("/volumeup");
     }
 
     public void volumedown(View view){
-        volumeRequest("/volumedown-token");
-    }
-
-    private void signInRequest(){
-        RequestQueue queue = Volley.newRequestQueue(this);
-
-        String url = serverAddr + "/auth/google";
-
-        // Request a string response from the provided URL.
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-                        Log.d("Response", response);
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("ErrorResponse", String.valueOf(error));
-                signOut();
-            }
-        }){
-            protected Map<String, String> getParams()
-            {
-                Map<String, String>  params = new HashMap<String, String>();
-                params.put("id_token", getAccount().getIdToken());
-                return params;
-            }
-        };
-        // Add the request to the RequestQueue.
-
-        queue.add(stringRequest);
+        volumeRequest("/volumedown");
     }
 
     private void volumeRequest(String upOrDown){
         RequestQueue queue = Volley.newRequestQueue(this);
 
-        String url = serverAddr + upOrDown;
+        String url = "http://" + PiAddress + upOrDown;
 
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
@@ -304,9 +119,7 @@ public class SystemCTL extends AppCompatActivity {
                     public void onResponse(String response) {
                         // Display the first 500 characters of the response string.
                         Log.d("Response", response);
-                        int intResponse = Integer.parseInt(response.trim());
                         progressBar.setProgress(Integer.parseInt(response.trim()));
-                        progressBar.setVisibility(View.VISIBLE);
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -314,21 +127,10 @@ public class SystemCTL extends AppCompatActivity {
                 Log.e("ErrorResponse", String.valueOf(error));
                 reloadScreen();
             }
-        }){
-            protected Map<String, String> getParams()
-            {
-                Map<String, String>  params = new HashMap<String, String>();
-                params.put("id_token", getAccount().getIdToken());
-                return params;
-            }
-        };
+        });
         // Add the request to the RequestQueue.
 
         queue.add(stringRequest);
-    }
-
-    private void setVolume(int vol){
-        progressBar.setProgress(vol);
     }
 
     private void setAddr(String val){
@@ -356,6 +158,7 @@ public class SystemCTL extends AppCompatActivity {
                 Intent intent = new Intent(SystemCTL.this, rebootScreen.class);
                 intent.putExtra("osName", osName);
                 intent.putExtra("requestURL", "/switchOS");
+                intent.putExtra("piAddress", PiAddress);
                 startActivity(intent);
             }
         });

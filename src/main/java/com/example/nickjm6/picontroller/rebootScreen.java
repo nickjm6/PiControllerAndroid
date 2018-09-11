@@ -26,21 +26,21 @@ import java.util.concurrent.TimeUnit;
 
 public class rebootScreen extends AppCompatActivity {
     private int numTries = 0;
-    private String serverAddress;
+    private String piAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reboot_screen);
-        serverAddress = getString(R.string.serverAddress);
         Intent intent = getIntent();
         final String requestURL = intent.getStringExtra("requestURL");
+        piAddress = intent.getStringExtra("piAddress");
         String osName = "";
         if (requestURL.equals("/switchOS")){
             osName =  intent.getStringExtra("osName").toLowerCase().trim();
         }
 
-        String url = serverAddress + requestURL + "-token";
+        String url = "http://" + piAddress + requestURL;
 
         makePostRequest(url, osName);
     }
@@ -52,25 +52,15 @@ public class rebootScreen extends AppCompatActivity {
             return;
         }
 
-        String url = serverAddress + "/piInfo";
+        String url = "http://" + piAddress + "/currentOS";
+        final String addr = piAddress;
 
         // Request a string response from the provided URL.
         final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-                        Log.d("Status", "Got Response! " + response);
-                        try {
-                            JSONObject obj = new JSONObject(response);
-                            String addr = obj.getString("piAddress");
-                            String os = obj.getString("os");
-                            int volume = Integer.parseInt(obj.getString("volume"));
-                            mainScreen(addr, os, volume);
-                            return;
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                        mainScreen(addr, response);
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -125,15 +115,10 @@ public class rebootScreen extends AppCompatActivity {
                 if(osName.length() > 0){
                     params.put("osName", osName);
                 }
-                params.put("id_token", getAccount().getIdToken());
                 return params;
             }
         };
         queue.add(postRequest);
-    }
-
-    private GoogleSignInAccount getAccount(){
-        return GoogleSignIn.getLastSignedInAccount(this);
     }
 
     private void failConnection(){
@@ -141,11 +126,10 @@ public class rebootScreen extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void mainScreen(String addr, String os, int volume){
+    private void mainScreen(String addr, String os){
         Intent intent = new Intent(this, SystemCTL.class);
         intent.putExtra("piAddress", addr);
         intent.putExtra("os", os);
-        intent.putExtra("volume", volume);
         startActivity(intent);
         finish();
     }
