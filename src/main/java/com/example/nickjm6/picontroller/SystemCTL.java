@@ -61,6 +61,7 @@ public class SystemCTL extends AppCompatActivity {
         Intent intent = getIntent();
         setAddr(intent.getStringExtra("piAddress"));
         setCurrentOS(intent.getStringExtra("os"));
+        progressBar.setProgress(intent.getIntExtra("volume", 0));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -119,7 +120,13 @@ public class SystemCTL extends AppCompatActivity {
                     public void onResponse(String response) {
                         // Display the first 500 characters of the response string.
                         Log.d("Response", response);
-                        progressBar.setProgress(Integer.parseInt(response.trim()));
+                        try{
+                            JSONObject js = new JSONObject(response);
+                            int vol = js.getInt("volume");
+                            progressBar.setProgress(vol);
+                        }catch(JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }, new Response.ErrorListener() {
             @Override

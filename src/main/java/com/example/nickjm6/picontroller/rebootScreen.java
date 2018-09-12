@@ -52,7 +52,7 @@ public class rebootScreen extends AppCompatActivity {
             return;
         }
 
-        String url = "http://" + piAddress + "/currentOS";
+        String url = "http://" + piAddress + "/osAndVolume";
         final String addr = piAddress;
 
         // Request a string response from the provided URL.
@@ -60,7 +60,16 @@ public class rebootScreen extends AppCompatActivity {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        mainScreen(addr, response);
+                        String os = "no response from server";
+                        int volume = 0;
+                        try{
+                            JSONObject js = new JSONObject(response);
+                            os = js.getString("currentOS");
+                            volume = js.getInt("volume");
+                        }catch(JSONException e){
+                            e.printStackTrace();
+                        }
+                        mainScreen(addr, os, volume);
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -126,10 +135,11 @@ public class rebootScreen extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void mainScreen(String addr, String os){
+    private void mainScreen(String addr, String os, int volume){
         Intent intent = new Intent(this, SystemCTL.class);
         intent.putExtra("piAddress", addr);
         intent.putExtra("os", os);
+        intent.putExtra("volume", volume);
         startActivity(intent);
         finish();
     }
