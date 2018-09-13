@@ -1,6 +1,9 @@
 package com.example.nickjm6.picontroller;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.DhcpInfo;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -18,8 +21,13 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
+
+import static android.app.PendingIntent.getActivity;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ArrayList<String> addresses = getAddresses();
+//        piSearch();
         pingRazPi("192.168.0.15");
     }
 
@@ -55,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
+                } catch (Exception e){
+                    e.printStackTrace();
                 }
                 return null;
             }
@@ -81,6 +93,9 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(String response) {
                         String message;
+                        if(address == "192.168.0.15"){
+                            Log.d("status", "found it");
+                        }
                         try{
                             JSONObject js = new JSONObject(response);
                             message = js.getString("message");
@@ -136,7 +151,55 @@ public class MainActivity extends AppCompatActivity {
         });
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
+
     }
+
+    public byte[] extractBytes(int ip){
+        return new byte[] {
+                (byte) (ip >> 24),
+                (byte) (ip >> 16),
+                (byte) (ip >> 8),
+                (byte) (ip)
+        };
+    }
+
+    public ArrayList<String> getAddresses(){
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        DhcpInfo dhcpInfo = wifiManager.getDhcpInfo();
+        short networkPrefix = 0;
+        byte[] bytes = extractBytes(50374848);
+        try {
+            InetAddress inetAddress = InetAddress.getByName(formatIP(dhcpInfo.ipAddress));
+            NetworkInterface networkInterface = NetworkInterface.getByInetAddress(inetAddress);
+            for (InterfaceAddress address : networkInterface.getInterfaceAddresses()) {
+                if(address.toString().contains(formatIP(dhcpInfo.ipAddress)))
+                    networkPrefix = address.getNetworkPrefixLength();
+            }
+        } catch (Exception e) {
+            Log.e("Network Error", e.getMessage());
+        }
+        Log.d("Net Prefix", String.valueOf(networkPrefix));
+        ArrayList<String> res = new ArrayList<String>();
+//        WifiManager wifiMan = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+//        DhcpInfo dhcpInfo = wifiMan.getDhcpInfo();
+//        String address = formatIP(dhcpInfo.ipAddress);
+//        String mask = formatIP(dhcpInfo.netmask);
+//        String gateway = formatIP(dhcpInfo.gateway);
+//        String serverAddr = formatIP(dhcpInfo.serverAddress);
+//        String formattedBaseAddr = formatIP(dhcpInfo.ipAddress & dhcpInfo.gateway);
+//        int subnet = gateway.length() - gateway.replace("0", "").length();
+//        Log.d("IP", address);
+//        Log.d("Gateway", gateway);
+//        Log.d("ServerAddress", serverAddr);
+//        Log.d("Base Address", formattedBaseAddr);
+//        Log.d("Subnet", String.valueOf(subnet));
+        return res;
+    }
+
+    public String formatIP(int ip){
+        return String.format("%d.%d.%d.%d", (ip & 0xff),(ip >> 8 & 0xff),(ip >> 16 & 0xff),(ip >> 24 & 0xff));
+    }
+
 
     private void failConnection(){
         Intent intent = new Intent(this, failedConnection.class);
