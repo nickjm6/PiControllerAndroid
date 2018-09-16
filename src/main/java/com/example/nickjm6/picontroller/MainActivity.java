@@ -15,7 +15,11 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.JsonHttpResponseHandler;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -27,6 +31,8 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
+import cz.msebera.android.httpclient.Header;
+
 import static android.app.PendingIntent.getActivity;
 
 public class MainActivity extends AppCompatActivity {
@@ -37,51 +43,34 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ArrayList<String> addresses = getAddresses();
 //        piSearch();
-        pingRazPi("192.168.0.15");
+        pingPi("192.168.0.15");
     }
 
     private void piSearch(){
         for(int i = 2; i < 255; i++){
-            String hostname = "192.168.0." + i;
-            getInetAddressByName(hostname);
+            final String hostname = "192.168.0." + i;
+            pingPi(hostname);
         }
     }
 
-    private void getInetAddressByName(String name)
-    {
-        AsyncTask<String, Void, Void> task = new AsyncTask<String, Void, Void>()
-        {
+    public void pingPi(final String piAddress) {
+        PiHTTPClient.get(piAddress, "ping", new JsonHttpResponseHandler(){
             @Override
-            protected Void doInBackground(String... params)
-            {
-                try
-                {
-                    if(InetAddress.getByName(params[0]).isReachable(300)){
-                        pingRazPi(params[0]);
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response){
+                try {
+                    if(response.getString("message").equals("MyRazPi")){
+                        getOSandVolume(piAddress);
                     }
-                }
-                catch (UnknownHostException e)
-                {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (Exception e){
+                } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                return null;
             }
-        };
-        try
-        {
-            task.execute(name).get();
-        }
-        catch (InterruptedException e)
-        {
-        }
-        catch (ExecutionException e)
-        {
-        }
 
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Log.e("Pi Response", "Failure: " + throwable.getMessage() + ": " +  piAddress);
+            }
+        });
     }
 
     private void pingRazPi(final String address){

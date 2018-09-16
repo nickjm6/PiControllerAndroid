@@ -126,6 +126,7 @@
     <orderEntry type="library" scope="TEST" name="Gradle: com.android.support.test:rules-0.5" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-games-11.8.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-maps-license-11.8.0" level="project" />
+    <orderEntry type="library" name="Gradle: cz.msebera.android:httpclient:4.3.6@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:support-annotations:26.1.0@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-vision-license-11.8.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-drive-11.8.0" level="project" />
@@ -224,6 +225,7 @@
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-tagmanager-api-license-11.8.0" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:design-26.1.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-places-11.8.0" level="project" />
+    <orderEntry type="library" name="Gradle: com.loopj.android:android-async-http:1.4.9@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.google.firebase:firebase-auth-11.8.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-maps-11.8.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.android.gms:play-services-location-license-11.8.0" level="project" />
