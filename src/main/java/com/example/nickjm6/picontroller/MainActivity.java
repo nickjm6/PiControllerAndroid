@@ -2,6 +2,7 @@ package com.example.nickjm6.picontroller;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.DhcpInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
@@ -41,106 +42,98 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ArrayList<String> addresses = getAddresses();
-//        piSearch();
-        pingPi("192.168.0.15");
-    }
-
-    private void piSearch(){
+        ArrayList<String> addresses = new ArrayList<String>();
         for(int i = 2; i < 255; i++){
-            final String hostname = "192.168.0." + i;
-            pingPi(hostname);
+            addresses.add("192.168.0." + i);
+        }
+        SharedPreferences settings = getApplicationContext().getSharedPreferences("AddressCache", 0);
+        String previousAddress = settings.getString("piAddress", null);
+        if(previousAddress != null){
+            Log.d("AddressCache", "it's working");
+            getOSandVolume(previousAddress);
+        } else{
+            piSearch(addresses);
         }
     }
 
-    public void pingPi(final String piAddress) {
-        PiHTTPClient.get(piAddress, "ping", new JsonHttpResponseHandler(){
+    private void piSearch(final ArrayList<String> addresses){
+        for(final String address: addresses){
+            PiHTTPClient.get(address, "ping", new JsonHttpResponseHandler(){
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                    try {
+                        Log.d("Found Address", address);
+                        if (response.getString("message").equals("MyRazPi")){
+                            Log.d("Found Pi Address", address);
+                            SharedPreferences settings = getApplicationContext().getSharedPreferences("AddressCache", 0);
+                            SharedPreferences.Editor editor = settings.edit();
+                            editor.putString("piAddress", address);
+                            editor.apply();
+                            getOSandVolume(address);
+                        }
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+
+                    }
+                }
+
+                @Override
+                public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                    if(address.equals(addresses.get(addresses.size() - 1))) {
+                        Log.e("END", "Reached end of list");
+                        failConnection();
+                    }
+                }
+            });
+        }
+    }
+
+//    public boolean pingPi(final String piAddress) {
+//        PiHTTPClient.get(piAddress, "ping", new JsonHttpResponseHandler(){
+//            @Override
+//            public void onSuccess(int statusCode, Header[] headers, JSONObject response){
+//                try {
+//                    if(response.getString("message").equals("MyRazPi")){
+//                        getOSandVolume(piAddress);
+//                    }
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+//                Log.e("Pi Response", "Failure: " + throwable.getMessage() + ": " +  piAddress);
+//            }
+//        });
+//    }
+
+
+    private void getOSandVolume(final String address){
+        PiHTTPClient.get(address, "osAndVolume", new JsonHttpResponseHandler(){
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response){
-                try {
-                    if(response.getString("message").equals("MyRazPi")){
-                        getOSandVolume(piAddress);
-                    }
-                } catch (JSONException e) {
+                try{
+                    String currentOs = response.getString("currentOS");
+                    int volume = response.getInt("volume");
+                    Log.d("Os And Volume", currentOs + ", " + volume);
+                    mainScreen(address, currentOs, volume);
+                }catch(JSONException e){
                     e.printStackTrace();
                 }
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                Log.e("Pi Response", "Failure: " + throwable.getMessage() + ": " +  piAddress);
-            }
-        });
-    }
-
-    private void pingRazPi(final String address){
-        final RequestQueue queue = Volley.newRequestQueue(this);
-
-        final String url = "http://" + address + "/ping";
-        final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        String message;
-                        if(address == "192.168.0.15"){
-                            Log.d("status", "found it");
-                        }
-                        try{
-                            JSONObject js = new JSONObject(response);
-                            message = js.getString("message");
-                        }catch(JSONException e){
-                            e.printStackTrace();
-                            return;
-                        }
-                        Log.d("ping response", response);
-                        if(message.equals("MyRazPi")){
-                            getOSandVolume(address);
-                            return;
-                        }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("ping response", "not the raspberry pi");
-            }
-        });
-        queue.add(stringRequest);
-    }
-
-    private void getOSandVolume(final String address){
-        final RequestQueue queue = Volley.newRequestQueue(this);
-
-        String url = "http://" + address + "/osAndVolume";
-
-        // Request a string response from the provided URL.
-        final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-                        String currentOS;
-                        int volume;
-                        try{
-                            JSONObject js = new JSONObject(response);
-                            currentOS = js.getString("currentOS");
-                            volume = js.getInt("volume");
-
-                        }catch(JSONException e){
-                            e.printStackTrace();
-                            return;
-                        }
-                        mainScreen(address, currentOS, volume);
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("ErrorResponse", String.valueOf(error));
+                Log.e("PI ERROR", String.valueOf(statusCode));
+                SharedPreferences settings = getApplicationContext().getSharedPreferences("AddressCache", 0);
+                SharedPreferences.Editor editor = settings.edit();
+                editor.clear();
+                editor.apply();
                 failConnection();
             }
         });
-        // Add the request to the RequestQueue.
-        queue.add(stringRequest);
-
     }
 
     public byte[] extractBytes(int ip){
