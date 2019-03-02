@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
             });
         }
     }
-
+//
 //    public boolean pingPi(final String piAddress) {
 //        PiHTTPClient.get(piAddress, "ping", new JsonHttpResponseHandler(){
 //            @Override
@@ -134,52 +134,6 @@ public class MainActivity extends AppCompatActivity {
                 failConnection();
             }
         });
-    }
-
-    public byte[] extractBytes(int ip){
-        return new byte[] {
-                (byte) (ip >> 24),
-                (byte) (ip >> 16),
-                (byte) (ip >> 8),
-                (byte) (ip)
-        };
-    }
-
-    public ArrayList<String> getAddresses(){
-        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        DhcpInfo dhcpInfo = wifiManager.getDhcpInfo();
-        short networkPrefix = 0;
-        byte[] bytes = extractBytes(50374848);
-        try {
-            InetAddress inetAddress = InetAddress.getByName(formatIP(dhcpInfo.ipAddress));
-            NetworkInterface networkInterface = NetworkInterface.getByInetAddress(inetAddress);
-            for (InterfaceAddress address : networkInterface.getInterfaceAddresses()) {
-                if(address.toString().contains(formatIP(dhcpInfo.ipAddress)))
-                    networkPrefix = address.getNetworkPrefixLength();
-            }
-        } catch (Exception e) {
-            Log.e("Network Error", e.getMessage());
-        }
-        Log.d("Net Prefix", String.valueOf(networkPrefix));
-        ArrayList<String> res = new ArrayList<String>();
-//        WifiManager wifiMan = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-//        DhcpInfo dhcpInfo = wifiMan.getDhcpInfo();
-//        String address = formatIP(dhcpInfo.ipAddress);
-//        String mask = formatIP(dhcpInfo.netmask);
-//        String gateway = formatIP(dhcpInfo.gateway);
-//        String serverAddr = formatIP(dhcpInfo.serverAddress);
-//        String formattedBaseAddr = formatIP(dhcpInfo.ipAddress & dhcpInfo.gateway);
-//        int subnet = gateway.length() - gateway.replace("0", "").length();
-//        Log.d("IP", address);
-//        Log.d("Gateway", gateway);
-//        Log.d("ServerAddress", serverAddr);
-//        Log.d("Base Address", formattedBaseAddr);
-//        Log.d("Subnet", String.valueOf(subnet));
-        return res;
-    }
-
-    public String formatIP(int ip){
-        return String.format("%d.%d.%d.%d", (ip & 0xff),(ip >> 8 & 0xff),(ip >> 16 & 0xff),(ip >> 24 & 0xff));
     }
 
 

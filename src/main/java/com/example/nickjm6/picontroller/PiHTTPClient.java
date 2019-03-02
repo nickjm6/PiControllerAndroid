@@ -17,7 +17,7 @@ public class PiHTTPClient {
             return;
         }
         String fullURL = "http://" + piAddress + "/" + endpoint;
-        client.post(fullURL, responseHandler);
+        client.get(fullURL, responseHandler);
     }
 
     public static void get(String address, String endpoint, AsyncHttpResponseHandler responseHandler){
