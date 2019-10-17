@@ -19,6 +19,8 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,6 +30,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import cz.msebera.android.httpclient.Header;
 
 public class rebootScreen extends AppCompatActivity {
     private int numTries = 0;
@@ -45,94 +49,73 @@ public class rebootScreen extends AppCompatActivity {
             osName =  intent.getStringExtra("osName").toLowerCase().trim();
         }
 
-        String url = "http://" + piAddress + requestURL;
-
-        makePostRequest(url, osName);
+        makePostRequest(piAddress, requestURL, osName);
     }
 
     private void makeRequest(){
-        RequestQueue queue = Volley.newRequestQueue(this);
-        if (numTries > 7){
+        if(numTries > 7){
             failConnection();
             return;
         }
-
-        String url = "http://" + piAddress + "/osAndVolume";
-        final String addr = piAddress;
-
-        // Request a string response from the provided URL.
-        final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        String os = "no response from server";
-                        int volume = 0;
-                        try{
-                            JSONObject js = new JSONObject(response);
-                            os = js.getString("currentOS");
-                            volume = js.getInt("volume");
-                        }catch(JSONException e){
-                            e.printStackTrace();
-                        }
-                        mainScreen(addr, os, volume);
-                    }
-                }, new Response.ErrorListener() {
+        PiHTTPClient.setPiAddress(piAddress);
+        PiHTTPClient.get("osAndVolume", new JsonHttpResponseHandler(){
             @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("ErrorResponse", String.valueOf(error));
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response){
+                try{
+                    String currentOs = response.getString("currentOS");
+                    int volume = response.getInt("volume");
+                    Log.d("Os And Volume", currentOs + ", " + volume);
+                    mainScreen(piAddress, currentOs, volume);
+                }catch(JSONException e){
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                numTries++;
                 try {
-                    TimeUnit.SECONDS.sleep(5);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                finally {
-                    numTries++;
-                    makeRequest();
-                }
+                makeRequest();
             }
         });
-        // Add the request to the RequestQueue.
-        queue.add(stringRequest);
     }
 
-    private void makePostRequest(final String requestURL, final String osName){
-        RequestQueue queue = Volley.newRequestQueue(this);
-        StringRequest postRequest = new StringRequest(Request.Method.POST, requestURL,
-                new Response.Listener<String>()
-                {
-                    @Override
-                    public void onResponse(String response) {
-                        // response
-                        Log.d("Response", response);
-                        try {
-                            TimeUnit.SECONDS.sleep(12);
-                            makeRequest();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+    private void makePostRequest(final String address, final String endpoint, final String osName){
+        PiHTTPClient.setPiAddress(address);
+        JSONObject requestParams = new JSONObject();
+        try {
+            requestParams.put("osName", osName);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        Context context = getApplicationContext();
+        PiHTTPClient.post(context, endpoint, requestParams, new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response){
+                try {
+                    Log.d("Response", response.getString("message"));
+                } catch (JSONException e) {
+                    Log.e("Response", "An unexpected error occured");
+                }
+                try {
+                    TimeUnit.SECONDS.sleep(12);
+                    makeRequest();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
-                    }
-                },
-                new Response.ErrorListener()
-                {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        // error
-                        Log.d("Error.Response", error.toString());
-                        finish();
-                    }
-                }
-        ) {@Override
-            protected Map<String, String> getParams()
-            {
-                Map<String, String>  params = new HashMap<String, String>();
-                if(osName.length() > 0){
-                    params.put("osName", osName);
-                }
-                return params;
             }
-        };
-        queue.add(postRequest);
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Log.d("Error.Response", errorResponse.toString());
+                finish();
+            }
+        });
     }
 
     private void failConnection(){

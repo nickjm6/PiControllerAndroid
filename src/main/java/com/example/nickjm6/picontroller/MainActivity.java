@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.DhcpInfo;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
@@ -38,76 +40,31 @@ import static android.app.PendingIntent.getActivity;
 
 public class MainActivity extends AppCompatActivity {
 
+    NsdHelper nsdHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ArrayList<String> addresses = new ArrayList<String>();
-        for(int i = 2; i < 255; i++){
-            addresses.add("192.168.0." + i);
-        }
-        SharedPreferences settings = getApplicationContext().getSharedPreferences("AddressCache", 0);
-        String previousAddress = settings.getString("piAddress", null);
-        if(previousAddress != null){
-            Log.d("AddressCache", "it's working");
-            getOSandVolume(previousAddress);
-        } else{
-            piSearch(addresses);
-        }
-    }
-
-    private void piSearch(final ArrayList<String> addresses){
-        for(final String address: addresses){
-            PiHTTPClient.get(address, "ping", new JsonHttpResponseHandler(){
-                @Override
-                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                    try {
-                        Log.d("Found Address", address);
-                        if (response.getString("message").equals("MyRazPi")){
-                            Log.d("Found Pi Address", address);
-                            SharedPreferences settings = getApplicationContext().getSharedPreferences("AddressCache", 0);
-                            SharedPreferences.Editor editor = settings.edit();
-                            editor.putString("piAddress", address);
-                            editor.apply();
-                            getOSandVolume(address);
-                        }
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-
-                    }
-                }
-
-                @Override
-                public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                    if(address.equals(addresses.get(addresses.size() - 1))) {
-                        Log.e("END", "Reached end of list");
-                        failConnection();
-                    }
-                }
-            });
+//        SharedPreferences settings = getApplicationContext().getSharedPreferences("AddressCache", 0);
+//        String previousAddress = settings.getString("piAddress", null);
+//        if(previousAddress != null){
+//            Log.d("AddressCache", "it's working");
+//            getOSandVolume(previousAddress);
+//        } else{
+//            piSearch(addresses);
+//        }
+        nsdHelper = new NsdHelper(this);
+        nsdHelper.initializeNsd();
+        try {
+            String piAddress = nsdHelper.getPiAddress();
+            Log.d("PiAddress", piAddress);
+            getOSandVolume(piAddress);
+        } catch (Exception e) {
+            Log.e("PiAddress", e.getMessage());
+            failConnection();
         }
     }
-//
-//    public boolean pingPi(final String piAddress) {
-//        PiHTTPClient.get(piAddress, "ping", new JsonHttpResponseHandler(){
-//            @Override
-//            public void onSuccess(int statusCode, Header[] headers, JSONObject response){
-//                try {
-//                    if(response.getString("message").equals("MyRazPi")){
-//                        getOSandVolume(piAddress);
-//                    }
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-//                Log.e("Pi Response", "Failure: " + throwable.getMessage() + ": " +  piAddress);
-//            }
-//        });
-//    }
 
 
     private void getOSandVolume(final String address){
@@ -121,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
                     mainScreen(address, currentOs, volume);
                 }catch(JSONException e){
                     e.printStackTrace();
+                    failConnection();
                 }
             }
 
