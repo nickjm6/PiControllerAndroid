@@ -88,6 +88,10 @@ public class SystemCTL extends AppCompatActivity {
         rebootScreen("/reboot");
     }
 
+    public void poweroff(View view){
+        rebootScreen("/poweroff");
+    }
+
     public void refresh(View view){
         reloadScreen();
     }
