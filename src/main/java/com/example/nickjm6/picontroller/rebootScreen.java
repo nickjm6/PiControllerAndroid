@@ -45,7 +45,7 @@ public class rebootScreen extends AppCompatActivity {
         final String requestURL = intent.getStringExtra("requestURL");
         piAddress = intent.getStringExtra("piAddress");
         String osName = "";
-        if (requestURL.equals("/switchOS")){
+        if (requestURL.equals("/operatingSystem/switch")){
             osName =  intent.getStringExtra("osName").toLowerCase().trim();
         }
 
@@ -58,7 +58,7 @@ public class rebootScreen extends AppCompatActivity {
             return;
         }
         PiHTTPClient.setPiAddress(piAddress);
-        PiHTTPClient.get("osAndVolume", new JsonHttpResponseHandler(){
+        PiHTTPClient.get("piInfo", new JsonHttpResponseHandler(){
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response){
                 try{
@@ -76,6 +76,7 @@ public class rebootScreen extends AppCompatActivity {
                 numTries++;
                 try {
                     Thread.sleep(1000);
+                    numTries++;
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

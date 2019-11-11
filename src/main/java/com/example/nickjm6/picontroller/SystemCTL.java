@@ -85,11 +85,11 @@ public class SystemCTL extends AppCompatActivity {
     }
 
     public void reboot(View view){
-        rebootScreen("/reboot");
+        rebootScreen("/power/reboot");
     }
 
     public void poweroff(View view){
-        rebootScreen("/poweroff");
+        rebootScreen("/power/off");
     }
 
     public void refresh(View view){
@@ -105,11 +105,11 @@ public class SystemCTL extends AppCompatActivity {
     }
 
     public void volumeup(View view){
-        volumeRequest("/volumeup");
+        volumeRequest("/volume/up");
     }
 
     public void volumedown(View view){
-        volumeRequest("/volumedown");
+        volumeRequest("/volume/down");
     }
 
     private void volumeRequest(String upOrDown){
@@ -168,7 +168,7 @@ public class SystemCTL extends AppCompatActivity {
                 // Perform action on click
                 Intent intent = new Intent(SystemCTL.this, rebootScreen.class);
                 intent.putExtra("osName", osName);
-                intent.putExtra("requestURL", "/switchOS");
+                intent.putExtra("requestURL", "/operatingSystem/switch");
                 intent.putExtra("piAddress", PiAddress);
                 startActivity(intent);
             }

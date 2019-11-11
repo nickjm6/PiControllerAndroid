@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void getOSandVolume(final String address){
-        PiHTTPClient.get(address, "osAndVolume", new JsonHttpResponseHandler(){
+        PiHTTPClient.get(address, "piInfo", new JsonHttpResponseHandler(){
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response){
                 try{
