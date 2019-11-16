@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="disabled">#dddddd</color>
+    <color name="myGrey">#777777</color>
+    <color name="reboot">#FF0000</color>
+    <color name="rca">#FF7700</color>
+    <color name="hdmi">#000000</color>
+</resources>
